@@ -6,8 +6,10 @@ import mimetypes
 import cgi
 import threading
 import sqlite3
+import json
 
-PORT = 8019
+from SearchIndex import createIndex, getIndexElement
+PORT = 8123
 
 #This class will handle any incoming request from the browser
 class myHandler(BaseHTTPRequestHandler):
@@ -39,57 +41,57 @@ class myHandler(BaseHTTPRequestHandler):
 			self.send_error(404,'File Not Found: %s' % self.path)
 
 	#Handler for POST requests
+	#do_POST function gets execcuted for every POST request from client
 	def do_POST(self):
 		try:
 			try:
+				#Currently connecting to DB for every POST request
+				#You can change it to connect to DB based on the type of POST request rather than connecting for all POST requests
 				conn = sqlite3.connect('test.db')
-				print ("Database connection for POST request has been established")
 			except:
 				print ("Database connection failed")
 
-			if self.path == "/searchValidation":
+			if self.path == "/searchSuggestions":
 				try:
 					dataVariable = self.headers['Content-Length']
+					#dataVariable contains the length of the variable provided in the string format
 					dataVar = int(dataVariable)
-					length = self.rfile.read(dataVar).decode().strip()
-					dataString = int(length)
-					if dataString in searchList:
-						searchResult = "String found"
-						try:
-							self.wfile.write(searchResult.encode("utf-8"))
-						except:
-							print ("Could not send the response back")
+					user_input = self.rfile.read(dataVar).decode().strip()
+					print ("User Input: ", user_input)
+				except:
+					print ("Invalid literal. Waiting for complete input.")
+
+				try:
+					suggestionsBox = getIndexElement(user_input)
+					suggestionsBox = json.dumps(suggestionsBox)
+					self.wfile.write(suggestionsBox.encode("utf-8"))
 				except:
 					print ("Unable to process the POST request")
 
-			if self.path == "/submitResult":
+			if self.path == "/Form":
 				form = cgi.FieldStorage(
 					fp=self.rfile,
 					headers=self.headers,
 					environ={'REQUEST_METHOD':'POST',
 					'CONTENT_TYPE':self.headers['Content-Type'],
 				})
-				try:
-					searchDetail = form["searchID"].value.strip()
-				except:
-					print ("Failed to retrieve search input")
-				conn.commit()
-				conn.close()
 
 				try:
 					self.send_response(200)
 					self.end_headers()
-					message = "Finished process"
+					message = "Under Development"
 					self.wfile.write(message.encode("utf-8"))
 				except:
 					print ("Unable to send response: process error")
 
 			if self.path == "/searchDetails":
 				try:
-					searchDetail = "Search Detail"
+					searchDetail = "Under Development"
+					print (searchDetail)
 					self.wfile.write(searchDetail.encode("utf-8"))
 				except:
 					print ("Unable to fetch search detail")
+
 		except IOError:
 			self.send_error(404,'File Not Found: %s' % self.path)
 
@@ -103,6 +105,8 @@ try:
 	#incoming request
 	#server = HTTPServer(('', PORT), myHandler)
 	server = ThreadedTCPServer(('', PORT), myHandler)
+	noOfResults = createIndex()
+	print ("Index created: Number of Items: ", noOfResults)
 	print ('Started httpserver on port ' , PORT)
 	
 	ip,port = server.server_address
