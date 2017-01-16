@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+
+<script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js" >  </script>
+</head>
+<body>
+<div id = "chartContainer" style = "height: 650px; width: 100%; background-image:url('http://www.eurorock-belgium.com/wp-content/uploads/2015/11/background-world-map-2.jpg');background-size: 100% 100%;" />
+
+<script type = "text/javascript" >
+
+window.onload = function () {
+	var dataPoints = [{y : 10}, {y : 13}, {y : 18}, {y : 20}, {y : 17}];
+	var chart = new CanvasJS.Chart("chartContainer", {
+			title : {
+				text : "ESG Data"
+			},
+			         axisX:{
+        gridColor: "lightblue" ,
+        gridThickness: 0        
+      },
+      axisY:{        
+        interval: 15,
+        gridColor: "lightgreen",
+        gridThickness: 0
+      },backgroundColor: "rgba(255,255,255,0.5)",
+      
+			data : [{
+					type : "spline",
+					dataPoints : dataPoints
+				}
+			]
+		});
+
+	chart.render();
+	
+	var yVal = 15, updateCount = 0;
+	var updateChart = function () {
+
+		yVal = yVal + Math.round(5 + Math.random() * (-5 - 5));
+      	updateCount++;
+		
+		dataPoints.push({
+			y : yVal
+		});
+      	
+        chart.options.title.text = "ESG Data";
+		chart.render();    
+		
+	};
+
+	// update chart every second
+	setInterval(function(){updateChart()}, 1000);
+}
+	
+</script>
+</body>
+</html>
